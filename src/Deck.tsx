@@ -57,9 +57,6 @@ export const Deck: React.FC<DeckProps> = ({ index, step, frames, entry, lang }) 
   return (
     <AbsoluteFill className="slide">
       <div className="slide-grid" />
-      <div className="label dim" style={{ position: "absolute", left: 112, top: 48, fontSize: 20 }}>
-        // {n} · {def.label[lang]}
-      </div>
       <div
         className="label dim"
         style={{ position: "absolute", right: 112, top: 48, fontSize: 20, display: "flex", gap: 28, alignItems: "center" }}

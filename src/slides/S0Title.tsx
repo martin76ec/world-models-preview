@@ -48,7 +48,7 @@ export const S0Title: React.FC = () => {
       <At x={0} y={780} style={enter(t, 75)}>
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
           <Logo height={34} />
-          <div className="label dim">// martin larrea</div>
+          <div className="label dim">// Martin Larrea</div>
         </div>
       </At>
       <At x={960} y={70}>

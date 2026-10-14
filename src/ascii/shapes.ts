@@ -89,8 +89,13 @@ export function gear(
   /** 0 = air, 1 = body, 2 = solid edge (teeth, rim, hub ring) at a physical point. */
   const material = (px: number, py: number) => {
     const r = Math.hypot(px, py);
-    if (r > R || r < bore) return 0;
+    if (r > R) return 0;
     const phi = Math.atan2(py, px) - rot;
+    if (r < bore) {
+      // two keys jut into the bore so the centre visibly turns
+      const along = Math.abs(r * Math.cos(phi));
+      return Math.abs(r * Math.sin(phi)) < R * 0.11 && along > bore * 0.3 ? 2 : 0;
+    }
     if (r > root) {
       // tapered tooth: wide at the root, narrow at the tip
       const tf = ((((phi / TAU) * teeth) % 1) + 1) % 1;

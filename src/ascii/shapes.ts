@@ -79,8 +79,14 @@ export function gear(
   rot: number,
   bright = true,
 ) {
-  const root = R * 0.8;
-  const hub = R * 0.22;
+  const root = R * 0.76;
+  const rim = root * 0.8;
+  const hub = R * 0.26;
+  const bore = hub * 0.5;
+  // lightening holes cut through the web, centred between rim and hub
+  const holes = 4;
+  const holeAt = (rim + hub) / 2;
+  const holeR = (rim - hub) * 0.42;
   const t0: Tone = bright ? 0 : 1;
   const t1: Tone = bright ? 1 : 2;
   for (let y = 0; y < g.h; y++)
@@ -90,14 +96,19 @@ export function gear(
       const r = Math.hypot(dx, dy);
       if (r > R) continue;
       const phi = Math.atan2(dy, dx) - rot;
-      const tf = ((((phi / TAU) * teeth) % 1) + 1) % 1;
-      const spoke = Math.abs(Math.sin(phi * 2)) < 0.16;
       if (r > root) {
-        if (tf < 0.5) g.set(x, y, "█", t0);
-      } else if (r > root * 0.78) g.set(x, y, "▓", t1);
-      else if (r > hub) g.set(x, y, spoke ? "▒" : "·", spoke ? t1 : 3);
-      else if (r > hub * 0.45) g.set(x, y, "▓", t0);
-      else g.set(x, y, "o", 2);
+        // tapered tooth: wide at the root, narrow at the tip
+        const tf = ((((phi / TAU) * teeth) % 1) + 1) % 1;
+        const u = (r - root) / (R - root);
+        if (Math.abs(tf - 0.25) < 0.28 - 0.08 * u) g.set(x, y, "█", t0);
+      } else if (r > rim) g.set(x, y, "█", t0);
+      else if (r > hub) {
+        const k = Math.round((phi / TAU) * holes);
+        const ha = (k / holes) * TAU;
+        const inHole = Math.hypot(r * Math.cos(phi - ha) - holeAt, r * Math.sin(phi - ha)) < holeR;
+        if (!inHole) g.set(x, y, "▓", t1);
+      } else if (r > bore) g.set(x, y, "█", t0);
+      else if (Math.abs(Math.sin(phi)) < 0.35 && Math.cos(phi) > 0) g.set(x, y, "▪", t1); // keyway
     }
 }
 

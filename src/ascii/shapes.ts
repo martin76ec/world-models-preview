@@ -80,13 +80,12 @@ export function gear(
   bright = true,
 ) {
   const root = R * 0.72;
-  const rim = root * 0.8;
   const bore = R * 0.34;
-  const hub = bore + R * 0.1;
   const t0: Tone = bright ? 0 : 1;
   const t1: Tone = bright ? 1 : 2;
 
-  /** 0 = air, 1 = body, 2 = solid edge (teeth, rim, hub ring) at a physical point. */
+  /** 0 = air, 1 = dim wedge, 2 = bright wedge (teeth, keys) at a physical point.
+   * The body alternates wedges, one per tooth, so it turns visibly with the teeth. */
   const material = (px: number, py: number) => {
     const r = Math.hypot(px, py);
     if (r > R) return 0;
@@ -96,13 +95,13 @@ export function gear(
       const along = Math.abs(r * Math.cos(phi));
       return Math.abs(r * Math.sin(phi)) < R * 0.11 && along > bore * 0.3 ? 2 : 0;
     }
+    const tf = ((((phi / TAU) * teeth) % 1) + 1) % 1;
     if (r > root) {
       // tapered tooth: wide at the root, narrow at the tip
-      const tf = ((((phi / TAU) * teeth) % 1) + 1) % 1;
       const u = (r - root) / (R - root);
       return Math.abs(tf - 0.25) < 0.33 - 0.1 * u ? 2 : 0;
     }
-    return r > rim || r < hub ? 2 : 1;
+    return tf < 0.5 ? 2 : 1;
   };
 
   // Supersample each cell so edges follow coverage instead of popping

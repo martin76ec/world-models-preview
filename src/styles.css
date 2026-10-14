@@ -1,0 +1,167 @@
+@font-face {
+  font-family: "0xProto";
+  src: url(./assets/fonts/0xProto-Regular.woff2) format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "0xProto";
+  src: url(./assets/fonts/0xProto-Bold.woff2) format("woff2");
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "0xProto";
+  src: url(./assets/fonts/0xProto-Italic.woff2) format("woff2");
+  font-style: italic;
+  font-display: block;
+}
+
+/* zinc palette from martinlarrea.com (dark) */
+:root {
+  --bg: #09090b;
+  --fg: #fafafa;
+  --mid: #a1a1aa;
+  --dim: #52525b;
+  --faint: #27272a;
+  --mono: "0xProto", "JetBrains Mono", Menlo, "DejaVu Sans Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  color: var(--fg);
+  font-family: var(--mono);
+  overflow: hidden;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+.stage {
+  position: fixed;
+  inset: 0;
+  cursor: none;
+}
+.stage.pointer {
+  cursor: default;
+}
+
+.ascii {
+  margin: 0;
+  line-height: 1.2;
+  white-space: pre;
+  font-family: var(--mono);
+}
+.ascii > div {
+  height: 1.2em;
+}
+.cell {
+  display: inline-block;
+  width: 1ch;
+  height: 1.2em;
+  line-height: 1.2em;
+  text-align: center;
+  vertical-align: top;
+  overflow: visible;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  font-family: var(--mono);
+  color: var(--fg);
+  overflow: hidden;
+}
+.slide-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--faint) 1.2px, transparent 1.2px);
+  background-size: 48px 48px;
+  background-position: 24px 24px;
+  opacity: 0.55;
+}
+.content {
+  position: absolute;
+  top: 120px;
+  left: 112px;
+  right: 112px;
+  bottom: 96px;
+}
+
+.heading .title {
+  font-weight: 700;
+  font-size: 84px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: pre;
+}
+.heading .rule {
+  color: var(--dim);
+  font-size: 42px;
+  line-height: 1;
+  white-space: pre;
+  height: 40px;
+  overflow: hidden;
+}
+.heading .sub {
+  color: var(--mid);
+  font-size: 26px;
+  margin-top: 6px;
+}
+
+.label {
+  color: var(--mid);
+  font-size: 22px;
+  white-space: pre;
+}
+.label.dim {
+  color: var(--dim);
+}
+.tag {
+  display: inline-block;
+  border: 1px solid var(--dim);
+  padding: 2px 12px;
+  font-size: 20px;
+  color: var(--mid);
+}
+
+.notes {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 38vh;
+  overflow: auto;
+  background: rgba(9, 9, 11, 0.94);
+  border-top: 1px solid var(--faint);
+  color: var(--mid);
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 18px 32px 24px;
+  white-space: pre-wrap;
+  z-index: 10;
+}
+.notes b {
+  color: var(--fg);
+  font-weight: 400;
+}
+
+.help {
+  position: fixed;
+  right: 16px;
+  bottom: 12px;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  z-index: 11;
+  pointer-events: none;
+}

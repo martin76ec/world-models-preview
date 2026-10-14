@@ -81,14 +81,12 @@ export function gear(
 ) {
   const root = R * 0.72;
   const rim = root * 0.8;
-  const hub = R * 0.26;
-  const bore = hub * 0.45;
-  const spokes = 6;
-  const spokeW = R * 0.09; // half-width
+  const bore = R * 0.34;
+  const hub = bore + R * 0.1;
   const t0: Tone = bright ? 0 : 1;
   const t1: Tone = bright ? 1 : 2;
 
-  /** 0 = air, 1 = spoke, 2 = solid (teeth, rim, hub) at a physical point. */
+  /** 0 = air, 1 = body, 2 = solid edge (teeth, rim, hub ring) at a physical point. */
   const material = (px: number, py: number) => {
     const r = Math.hypot(px, py);
     if (r > R || r < bore) return 0;
@@ -97,11 +95,9 @@ export function gear(
       // tapered tooth: wide at the root, narrow at the tip
       const tf = ((((phi / TAU) * teeth) % 1) + 1) % 1;
       const u = (r - root) / (R - root);
-      return Math.abs(tf - 0.25) < 0.27 - 0.09 * u ? 2 : 0;
+      return Math.abs(tf - 0.25) < 0.33 - 0.1 * u ? 2 : 0;
     }
-    if (r > rim || r < hub) return 2;
-    const sa = (Math.round((phi / TAU) * spokes) / spokes) * TAU;
-    return Math.abs(r * Math.sin(phi - sa)) < spokeW ? 1 : 0;
+    return r > rim || r < hub ? 2 : 1;
   };
 
   // Supersample each cell so edges follow coverage instead of popping

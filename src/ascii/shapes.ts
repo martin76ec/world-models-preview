@@ -83,14 +83,12 @@ export function gear(
   const rim = root * 0.8;
   const hub = R * 0.26;
   const bore = hub * 0.45;
-  // lightening holes cut through the web, centred between rim and hub
-  const holes = 4;
-  const holeAt = (rim + hub) / 2;
-  const holeR = (rim - hub) * 0.42;
+  const spokes = 6;
+  const spokeW = R * 0.09; // half-width
   const t0: Tone = bright ? 0 : 1;
   const t1: Tone = bright ? 1 : 2;
 
-  /** 0 = air, 1 = web, 2 = solid (teeth, rim, hub) at a physical point. */
+  /** 0 = air, 1 = spoke, 2 = solid (teeth, rim, hub) at a physical point. */
   const material = (px: number, py: number) => {
     const r = Math.hypot(px, py);
     if (r > R || r < bore) return 0;
@@ -102,12 +100,13 @@ export function gear(
       return Math.abs(tf - 0.25) < 0.27 - 0.09 * u ? 2 : 0;
     }
     if (r > rim || r < hub) return 2;
-    const ha = (Math.round((phi / TAU) * holes) / holes) * TAU;
-    return Math.hypot(r * Math.cos(phi - ha) - holeAt, r * Math.sin(phi - ha)) < holeR ? 0 : 1;
+    const sa = (Math.round((phi / TAU) * spokes) / spokes) * TAU;
+    return Math.abs(r * Math.sin(phi - sa)) < spokeW ? 1 : 0;
   };
 
-  // Supersample each cell so edges shade by coverage instead of popping
-  // between whole cells as the gear turns.
+  // Supersample each cell so edges follow coverage instead of popping
+  // between whole cells as the gear turns. Only two glyph steps, so the
+  // outline stays crisp rather than fuzzy.
   const S = 4;
   const reach = R / CELL_W + 1;
   for (let y = Math.floor(cy - reach); y <= cy + reach; y++)
@@ -126,10 +125,9 @@ export function gear(
         }
       solid /= S * S;
       web /= S * S;
-      const d = solid + 0.6 * web;
-      if (d < 0.15) continue;
-      const ch = d > 0.8 ? "█" : d > 0.5 ? "▓" : d > 0.3 ? "▒" : "░";
-      g.set(x, y, ch, solid >= web ? t0 : t1);
+      const d = solid + web;
+      if (d < 0.4) continue;
+      g.set(x, y, d > 0.7 ? "█" : "▓", solid >= web ? t0 : t1);
     }
 }
 

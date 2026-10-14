@@ -1,6 +1,6 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
-import { gear } from "../ascii/shapes";
+import { gear, gearMesh } from "../ascii/shapes";
 import { enter, prog } from "../lib/anim";
 import { Ascii } from "../lib/Ascii";
 import { Grid } from "../lib/grid";
@@ -9,6 +9,7 @@ import { At, Heading } from "../lib/ui";
 import { useT } from "../lib/i18n";
 
 
+const MESH = gearMesh(19, 10, 12, 40, 19.3, 9);
 const DUCK = "  __\n<(o )___\n ( ._> /\n  `---'";
 
 const Gears: React.FC = () => {
@@ -17,8 +18,8 @@ const Gears: React.FC = () => {
   const g = new Grid(56, 28);
   const s = prog(t, 0, 30);
   const rot = frame * 0.03;
-  gear(g, 19, 10, 11 * s, 14, rot);
-  gear(g, 40, 19.3, 8 * s, 10, -rot * 1.4 + 0.2, false);
+  gear(g, 19, 10, 11 * s, 12, rot);
+  gear(g, 40, 19.3, 8 * s, 9, (-rot * 12) / 9 + MESH, false);
   return <Ascii grid={g} size={15} />;
 };
 

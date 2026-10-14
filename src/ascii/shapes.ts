@@ -79,37 +79,66 @@ export function gear(
   rot: number,
   bright = true,
 ) {
-  const root = R * 0.76;
+  const root = R * 0.72;
   const rim = root * 0.8;
   const hub = R * 0.26;
-  const bore = hub * 0.5;
+  const bore = hub * 0.45;
   // lightening holes cut through the web, centred between rim and hub
   const holes = 4;
   const holeAt = (rim + hub) / 2;
   const holeR = (rim - hub) * 0.42;
   const t0: Tone = bright ? 0 : 1;
   const t1: Tone = bright ? 1 : 2;
-  for (let y = 0; y < g.h; y++)
-    for (let x = 0; x < g.w; x++) {
-      const dx = (x - cx) * CELL_W;
-      const dy = (y - cy) * CELL_H;
-      const r = Math.hypot(dx, dy);
-      if (r > R) continue;
-      const phi = Math.atan2(dy, dx) - rot;
-      if (r > root) {
-        // tapered tooth: wide at the root, narrow at the tip
-        const tf = ((((phi / TAU) * teeth) % 1) + 1) % 1;
-        const u = (r - root) / (R - root);
-        if (Math.abs(tf - 0.25) < 0.28 - 0.08 * u) g.set(x, y, "█", t0);
-      } else if (r > rim) g.set(x, y, "█", t0);
-      else if (r > hub) {
-        const k = Math.round((phi / TAU) * holes);
-        const ha = (k / holes) * TAU;
-        const inHole = Math.hypot(r * Math.cos(phi - ha) - holeAt, r * Math.sin(phi - ha)) < holeR;
-        if (!inHole) g.set(x, y, "▓", t1);
-      } else if (r > bore) g.set(x, y, "█", t0);
-      else if (Math.abs(Math.sin(phi)) < 0.35 && Math.cos(phi) > 0) g.set(x, y, "▪", t1); // keyway
+
+  /** 0 = air, 1 = web, 2 = solid (teeth, rim, hub) at a physical point. */
+  const material = (px: number, py: number) => {
+    const r = Math.hypot(px, py);
+    if (r > R || r < bore) return 0;
+    const phi = Math.atan2(py, px) - rot;
+    if (r > root) {
+      // tapered tooth: wide at the root, narrow at the tip
+      const tf = ((((phi / TAU) * teeth) % 1) + 1) % 1;
+      const u = (r - root) / (R - root);
+      return Math.abs(tf - 0.25) < 0.27 - 0.09 * u ? 2 : 0;
     }
+    if (r > rim || r < hub) return 2;
+    const ha = (Math.round((phi / TAU) * holes) / holes) * TAU;
+    return Math.hypot(r * Math.cos(phi - ha) - holeAt, r * Math.sin(phi - ha)) < holeR ? 0 : 1;
+  };
+
+  // Supersample each cell so edges shade by coverage instead of popping
+  // between whole cells as the gear turns.
+  const S = 4;
+  const reach = R / CELL_W + 1;
+  for (let y = Math.floor(cy - reach); y <= cy + reach; y++)
+    for (let x = Math.floor(cx - reach); x <= cx + reach; x++) {
+      if (!g.inside(x, y)) continue;
+      let solid = 0;
+      let web = 0;
+      for (let j = 0; j < S; j++)
+        for (let i = 0; i < S; i++) {
+          const m = material(
+            (x - cx + (i + 0.5) / S - 0.5) * CELL_W,
+            (y - cy + (j + 0.5) / S - 0.5) * CELL_H,
+          );
+          if (m === 2) solid++;
+          else if (m === 1) web++;
+        }
+      solid /= S * S;
+      web /= S * S;
+      const d = solid + 0.6 * web;
+      if (d < 0.15) continue;
+      const ch = d > 0.8 ? "█" : d > 0.5 ? "▓" : d > 0.3 ? "▒" : "░";
+      g.set(x, y, ch, solid >= web ? t0 : t1);
+    }
+}
+
+/** Phase for a second gear so its teeth fall into the first gear's gaps.
+ * Drive it with `rot2 = -rot1 * n1 / n2 + gearMesh(...)`. */
+export function gearMesh(cx1: number, cy1: number, n1: number, cx2: number, cy2: number, n2: number) {
+  const th = Math.atan2((cy2 - cy1) * CELL_H, (cx2 - cx1) * CELL_W);
+  // tooth centres sit at 1/4 pitch, gaps at 3/4
+  return th + Math.PI - ((0.75 - ((th * n1) / TAU - 0.25)) * TAU) / n2;
 }
 
 /** Points along a parabola from (x0,y0) to (x1,y1) peaking `h` rows above the chord. */

@@ -12,7 +12,7 @@ import { useT } from "../lib/i18n";
 const GearIcon: React.FC = () => {
   const f = useCurrentFrame();
   const g = new Grid(24, 11);
-  gear(g, 12, 5, 6, 10, f * 0.03);
+  gear(g, 12, 5, 6, 8, f * 0.03);
   return <Ascii grid={g} size={18} />;
 };
 

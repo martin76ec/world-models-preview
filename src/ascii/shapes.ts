@@ -79,55 +79,48 @@ export function gear(
   rot: number,
   bright = true,
 ) {
-  const root = R * 0.72;
-  const bore = R * 0.34;
-  const t0: Tone = bright ? 0 : 1;
-  const t1: Tone = bright ? 1 : 2;
+  const root = R * 0.74;
+  const bore = R * 0.3;
+  const tone: Tone = bright ? 0 : 1;
+  const BOLTS = R >= 7 ? 6 : 0; // too small to read on tiny gears
 
-  /** 0 = air, 1 = dim wedge, 2 = bright wedge (teeth, keys) at a physical point.
-   * The body alternates wedges, one per tooth, so it turns visibly with the teeth. */
-  const material = (px: number, py: number) => {
+  /** Whether a physical point (relative to the centre) is metal. */
+  const solid = (px: number, py: number) => {
     const r = Math.hypot(px, py);
-    if (r > R) return 0;
+    if (r > R) return false;
     const phi = Math.atan2(py, px) - rot;
-    if (r < bore) {
-      // two keys jut into the bore so the centre visibly turns
-      const along = Math.abs(r * Math.cos(phi));
-      return Math.abs(r * Math.sin(phi)) < R * 0.11 && along > bore * 0.3 ? 2 : 0;
+    if (r < bore) return false;
+    if (r < root) {
+      // ring of bolt holes so the body visibly turns with the teeth
+      if (!BOLTS) return true;
+      const ha = (Math.round((phi / TAU) * BOLTS) / BOLTS) * TAU;
+      const at = (bore + root) / 2;
+      return Math.hypot(r * Math.cos(phi - ha) - at, r * Math.sin(phi - ha)) > R * 0.12;
     }
+    // tapered tooth: wide at the root, narrow at the tip
     const tf = ((((phi / TAU) * teeth) % 1) + 1) % 1;
-    if (r > root) {
-      // tapered tooth: wide at the root, narrow at the tip
-      const u = (r - root) / (R - root);
-      return Math.abs(tf - 0.25) < 0.33 - 0.1 * u ? 2 : 0;
-    }
-    return tf < 0.5 ? 2 : 1;
+    const u = (r - root) / (R - root);
+    return Math.abs(tf - 0.25) < 0.33 - 0.08 * u;
   };
 
-  // Supersample each cell so edges follow coverage instead of popping
-  // between whole cells as the gear turns. Only two glyph steps, so the
-  // outline stays crisp rather than fuzzy.
-  const S = 4;
+  // Each cell holds two square-ish pixels (top/bottom half blocks), doubling
+  // vertical resolution so the outline stays crisp as the gear turns.
+  // Each half-pixel is supersampled and lit when mostly covered.
+  const S = 3;
+  const covered = (x: number, y: number, half: 0 | 1) => {
+    let n = 0;
+    for (let j = 0; j < S; j++)
+      for (let i = 0; i < S; i++)
+        if (solid((x - cx + (i + 0.5) / S - 0.5) * CELL_W, (y - cy + (half + (j + 0.5) / S) / 2 - 0.5) * CELL_H)) n++;
+    return n * 2 > S * S;
+  };
   const reach = R / CELL_W + 1;
   for (let y = Math.floor(cy - reach); y <= cy + reach; y++)
     for (let x = Math.floor(cx - reach); x <= cx + reach; x++) {
       if (!g.inside(x, y)) continue;
-      let solid = 0;
-      let web = 0;
-      for (let j = 0; j < S; j++)
-        for (let i = 0; i < S; i++) {
-          const m = material(
-            (x - cx + (i + 0.5) / S - 0.5) * CELL_W,
-            (y - cy + (j + 0.5) / S - 0.5) * CELL_H,
-          );
-          if (m === 2) solid++;
-          else if (m === 1) web++;
-        }
-      solid /= S * S;
-      web /= S * S;
-      const d = solid + web;
-      if (d < 0.4) continue;
-      g.set(x, y, d > 0.7 ? "█" : "▓", solid >= web ? t0 : t1);
+      const top = covered(x, y, 0);
+      const bot = covered(x, y, 1);
+      if (top || bot) g.set(x, y, top && bot ? "█" : top ? "▀" : "▄", tone);
     }
 }
 
